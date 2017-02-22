@@ -24,8 +24,23 @@ func (reader *CSVReader) Read() (err error, dataSet DataSet){
 	if err != nil {
 		return
 	}
+	dataSet = NewDataGrid()
+	for _, f := range features {
+		err := dataSet.AddFeature(f)
+		if err != nil {
+			return
+		}
+	}
+	err = reader.BuildDataSetFromReader(features, dataSet)
+	if err != nil {
+		return
+	}
+	return
 }
 
+func (reader *CSVReader) BuildDataSetFromReader(features []Feature, dataSet *DataGrid) error {
+
+}
 
 func (reader *CSVReader) ParseFeatures() (err error, features []Feature) {
 	err, features = reader.ParseFeatureType()
@@ -43,7 +58,6 @@ func (reader *CSVReader) ParseFeatures() (err error, features []Feature) {
 }
 
 func (reader *CSVReader) ParseFeatureType() (err error, features []Feature) {
-	var feats []Feature
 	f, err := os.Open(reader.filename)
 	if err != nil {
 		return
@@ -67,21 +81,21 @@ func (reader *CSVReader) ParseFeatureType() (err error, features []Feature) {
 			return
 		}
 		if matched {
-			feats = append(feats, NewContinuousFeature(""))
+			features = append(features, NewContinuousFeature(""))
 		} else {
-			feats = append(feats, NewDiscreteFeature(""))
+			features = append(features, NewDiscreteFeature(""))
 		}
 	}
 	err, maxPrecision := reader.ParseMaxPrecision()
 	if err != nil {
 		return
 	}
-	for _, feat := range feats {
+	for _, feat := range features {
 		if f, ok := feat.(ContinuousFeature); ok {
 			f.Precision = maxPrecision
 		}
 	}
-	return feats
+	return
 }
 func (reader *CSVReader) ParseFeatureName() (err error, names []string) {
 	f, err := os.Open(reader.filename)

@@ -1,8 +1,4 @@
 package base
-
-type FeatureGroup struct {
-
-}
 //implement Feature => base/types.go
 type ContinuousFeature struct {
 	Name string
@@ -19,16 +15,3 @@ func NewContinuousFeature(name string) *ContinuousFeature {
 	}
 }
 
-type DiscreteFeature struct {
-	Name string
-}
-
-func (feature *DiscreteFeature)setName(name string) {
-	feature.Name = name
-}
-
-func NewDiscreteFeature (name string) *DiscreteFeature {
-	return &DiscreteFeature{
-		Name:name,
-	}
-}
