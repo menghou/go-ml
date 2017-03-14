@@ -1,6 +1,9 @@
 package base
 
-import "sync"
+import (
+	"sync"
+	"errors"
+)
 // grid implement DataSet in types.go
 type DataGrid struct {
 	features []Feature
@@ -30,12 +33,23 @@ func (d *DataGrid) AddFeature(f Feature) (err error) {
 			return
 		}
 	}
+	id := d.fgMap[ag]
+	a := d.fgs[id]
+	a.AddFeature(f)
+	d.features = append(d.features, f)
+	return nil
 }
-func (d *DataGrid) createFeatureGroup(name string) (err error) {
-	ag := &FeatureGroup{
-		fgs:make([]Feature,0),
+func (d *DataGrid) createFeatureGroup(name string) (error) {
+	fg := &FeatureGroup{
+		fs:make([]Feature,0),
 	}
-
+	if d.fixed {
+		return errors.New("data grid is fixed")
+	}
+	d.fgMap[name] = len(d.fgMap)
+	d.fgRevMap[len(d.fgMap)] = name
+	d.fgs = append(d.fgs, fg)
+	return nil
 }
 
 func NewDataGrid() *DataGrid {

@@ -38,7 +38,7 @@ func (reader *CSVReader) Read() (err error, dataSet DataSet){
 	return
 }
 
-func (reader *CSVReader) BuildDataSetFromReader(features []Feature, dataSet *DataGrid) error {
+func (reader *CSVReader) BuildDataSetFromReader(features []Feature, dataSet DataSet) error {
 
 }
 
