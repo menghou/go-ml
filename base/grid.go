@@ -1,13 +1,17 @@
 package base
 
 import (
-	"sync"
 	"errors"
+	"fmt"
+	"sync"
 )
+
 // grid implement DataSet in types.go
 type DataGrid struct {
 	features []Feature
-	fgMap    map[string]int
+	//fgMap means index of the feature group in fgs
+	fgMap map[string]int
+	//fgRevMap is the rev of fgMap
 	fgRevMap map[int]string
 	fgs      []*FeatureGroup
 	fixed    bool
@@ -39,9 +43,9 @@ func (d *DataGrid) AddFeature(f Feature) (err error) {
 	d.features = append(d.features, f)
 	return nil
 }
-func (d *DataGrid) createFeatureGroup(name string) (error) {
+func (d *DataGrid) createFeatureGroup(name string) error {
 	fg := &FeatureGroup{
-		fs:make([]Feature,0),
+		fs: make([]Feature, 0),
 	}
 	if d.fixed {
 		return errors.New("data grid is fixed")
@@ -51,13 +55,36 @@ func (d *DataGrid) createFeatureGroup(name string) (error) {
 	d.fgs = append(d.fgs, fg)
 	return nil
 }
-
+func (d *DataGrid) Set(fp FeaturePointer, row int, val []byte) error {
+	return d.fgs[fp.WhichFeatureGroup].set(fp.WhichFeatureInGroup, row, val)
+}
+func (d *DataGrid) GetAllFeaturePoints() (error, []FeaturePointer) {
+	re := make([]FeaturePointer, len(d.features))
+	for i, f := range re {
+		err, fp := d.GetFeaturePoint(f)
+		if err != nil {
+			return err
+		}
+		re[i] = fp
+	}
+	return nil, re
+}
+func (d *DataGrid) GetFeaturePoint(what Feature) (error, FeaturePointer) {
+	for i, fg := range d.fgs {
+		for j, f := range fg.AllFeatures() {
+			if f.Equal(what) {
+				return nil, FeaturePointer{WhichFeatureGroup: i, WhichFeatureInGroup: j, fea: f}
+			}
+		}
+	}
+	return FeaturePointer{WhichFeatureGroup: -1, WhichFeatureInGroup: -1, fea: nil}, errors.New(fmt.Sprintf("can't resolve %s", what))
+}
 func NewDataGrid() *DataGrid {
 	return &DataGrid{
-		fgMap:make(map[string]int),
-		fgRevMap:make(map[int]string),
-		features:make([]Feature,0),
-		fgs:make(map[string]*FeatureGroup),
-		fixed:false,
+		fgMap:    make(map[string]int),
+		fgRevMap: make(map[int]string),
+		features: make([]Feature, 0),
+		fgs:      make(map[string]*FeatureGroup),
+		fixed:    false,
 	}
 }

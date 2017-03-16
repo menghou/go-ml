@@ -1,20 +1,23 @@
 package base
 
 import (
-	"os"
-	"encoding/csv"
-	"strings"
-	"regexp"
 	"bufio"
+	"encoding/csv"
 	"fmt"
+	"io"
+	"os"
+	"regexp"
+	"strings"
 )
 
 type CSVReader struct {
-	filename string
+	filename  string
 	hasHeader bool
 }
 
-func (reader *CSVReader) Read() (err error, dataSet DataSet){
+//TODO fix dataSet size
+//TODO add class feature
+func (reader *CSVReader) Read() (err error, dataSet DataSet) {
 	f, err := os.Open(reader.filename)
 	if err != nil {
 		return
@@ -37,9 +40,32 @@ func (reader *CSVReader) Read() (err error, dataSet DataSet){
 	}
 	return
 }
-
 func (reader *CSVReader) BuildDataSetFromReader(features []Feature, dataSet DataSet) error {
-
+	r := csv.NewReader(reader.filename)
+	rowCount := 0
+	err, fps := dataSet.GetAllFeaturePoints()
+	if err != nil {
+		return err
+	}
+	for {
+		line, err := r.Read()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+		if rowCount == 0 && reader.hasHeader {
+			rowCount++
+			continue
+		}
+		for i, v := range line {
+			err := dataSet.Set(fps[i], rowCount, fps[i].fea.GetSysValFromString(strings.TrimSpace(v)))
+			if err != nil {
+				return err
+			}
+		}
+		rowCount++
+	}
 }
 
 func (reader *CSVReader) ParseFeatures() (err error, features []Feature) {
@@ -56,7 +82,6 @@ func (reader *CSVReader) ParseFeatures() (err error, features []Feature) {
 	}
 	return
 }
-
 func (reader *CSVReader) ParseFeatureType() (err error, features []Feature) {
 	f, err := os.Open(reader.filename)
 	if err != nil {
@@ -112,7 +137,7 @@ func (reader *CSVReader) ParseFeatureName() (err error, names []string) {
 		return
 	}
 	for i := range names {
-		names[i] = fmt.Sprintf("%d",i)
+		names[i] = fmt.Sprintf("%d", i)
 	}
 	return names
 }
@@ -158,7 +183,7 @@ func (reader *CSVReader) ParseMaxPrecision() (err error, precision int) {
 }
 func NewCSVReader(filename string, hasHeader bool) *CSVReader {
 	return &CSVReader{
-		filename:filename,
-		hasHeader:hasHeader,
+		filename:  filename,
+		hasHeader: hasHeader,
 	}
 }
