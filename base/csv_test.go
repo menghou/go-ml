@@ -1,0 +1,26 @@
+package base
+
+import (
+	"fmt"
+	"testing"
+)
+
+func TestCSVReader_ParseRowCount(t *testing.T) {
+	reader := NewCSVReader("../examples/datasets/iris.csv", false)
+	err, rowCount := reader.ParseRowCount()
+	if err != nil {
+		t.Error(err)
+	}
+	if rowCount != 150 {
+		t.Errorf("wrong rowCount :%d", rowCount)
+	}
+}
+
+func TestCSVReader_String(t *testing.T) {
+	reader := NewCSVReader("../examples/datasets/iris.csv", false)
+	err, instance := reader.Read()
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(instance)
+}
