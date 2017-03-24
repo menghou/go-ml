@@ -27,14 +27,14 @@ func (feature *DiscreteFeature) GetSysValFromString(str string) (error, []byte) 
 		existIndex = len(feature.vals)
 	}
 
-	return nil, PackFloatToBytes(uint64(existIndex))
+	return nil, PackU64ToBytes(uint64(existIndex))
 }
 func (feature *DiscreteFeature) GetStringFromSysVal(val []byte) (error, string) {
 	existIndex := int(UnPackBytesToFloat(val))
 	if existIndex >= len(feature.vals) {
 		return errors.New(fmt.Sprintf("Out of range: %d in %d (%s)", existIndex, len(feature.vals), feature)), ""
 	}
-	return feature.vals[existIndex]
+	return nil, feature.vals[existIndex]
 }
 
 func (feature *DiscreteFeature) Equal(what Feature) bool {
@@ -60,8 +60,8 @@ func (feature *DiscreteFeature) Equal(what Feature) bool {
 func (feature *DiscreteFeature) GetName() string {
 	return feature.Name
 }
-func (feature *DiscreteFeature) String() {
-	return fmt.Sprintf("DiscreteFeature(%s    |    %s)", feature.Name, feature.vals)
+func (feature *DiscreteFeature) String() string {
+	return fmt.Sprintf("DiscreteFeature(%s|%s)", feature.Name, feature.vals)
 }
 func NewDiscreteFeature(name string) *DiscreteFeature {
 	return &DiscreteFeature{

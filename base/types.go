@@ -8,6 +8,7 @@ type DataSet interface {
 	Size() (row, col int)
 	FixSize(int) error
 	AddClassFeature(Feature) error
+	String() string
 }
 
 //data read interface, hope to support mongo, mysql, rpc
@@ -19,4 +20,5 @@ type Feature interface {
 	GetSysValFromString(string) (error, []byte)
 	Equal(Feature) bool
 	GetName() string
+	String() string
 }

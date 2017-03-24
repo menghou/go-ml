@@ -18,37 +18,37 @@ type CSVReader struct {
 func (reader *CSVReader) Read() (err error, dataSet DataSet) {
 	f, err := os.Open(reader.filename)
 	if err != nil {
-		return
+		return err, dataSet
 	}
 	defer f.Close()
 	err, features := reader.ParseFeatures()
 	if err != nil {
-		return
+		return err, dataSet
 	}
 	err, rowCount := reader.ParseRowCount()
 	if err != nil {
-		return
+		return err, dataSet
 	}
 	dataSet = NewDataGrid()
 	for _, f := range features {
 		err := dataSet.AddFeature(f)
 		if err != nil {
-			return
+			return err, dataSet
 		}
 	}
 	err = dataSet.FixSize(rowCount)
 	if err != nil {
-		return
+		return err, dataSet
 	}
 	err = reader.BuildDataSetFromReader(features, dataSet)
 	if err != nil {
-		return
+		return err, dataSet
 	}
 	err = dataSet.AddClassFeature(features[len(features)-1])
 	if err != nil {
-		return
+		return err, dataSet
 	}
-	return
+	return err, dataSet
 }
 func (reader *CSVReader) ParseRowCount() (error, int) {
 	file, err := os.Open(reader.filename)
@@ -63,7 +63,7 @@ func (reader *CSVReader) ParseRowCount() (error, int) {
 		if _, err := r.Read(); err == io.EOF {
 			break
 		} else if err != nil {
-			return 0, err
+			return err, 0
 		}
 		counter++
 
@@ -72,12 +72,16 @@ func (reader *CSVReader) ParseRowCount() (error, int) {
 		counter--
 	}
 	if counter < 0 {
-		return 0, nil
+		return nil, 0
 	}
-	return counter, nil
+	return nil, counter
 }
 func (reader *CSVReader) BuildDataSetFromReader(features []Feature, dataSet DataSet) error {
-	r := csv.NewReader(reader.filename)
+	file, err := os.Open(reader.filename)
+	if err != nil {
+		return err
+	}
+	r := csv.NewReader(file)
 	rowCount := 0
 	err, fps := dataSet.GetAllFeaturePoints()
 	if err != nil {
@@ -95,13 +99,18 @@ func (reader *CSVReader) BuildDataSetFromReader(features []Feature, dataSet Data
 			continue
 		}
 		for i, v := range line {
-			err := dataSet.Set(fps[i], rowCount, fps[i].fea.GetSysValFromString(strings.TrimSpace(v)))
+			err, val := fps[i].fea.GetSysValFromString(strings.TrimSpace(v))
+			if err != nil {
+				return err
+			}
+			err = dataSet.Set(fps[i], rowCount, val)
 			if err != nil {
 				return err
 			}
 		}
 		rowCount++
 	}
+	return nil
 }
 
 func (reader *CSVReader) ParseFeatures() (err error, features []Feature) {
@@ -128,18 +137,18 @@ func (reader *CSVReader) ParseFeatureType() (err error, features []Feature) {
 	if reader.hasHeader {
 		_, err = freader.Read()
 		if err != nil {
-			return
+			return err, features
 		}
 	}
 	items, err := freader.Read()
 	if err != nil {
-		return
+		return err, features
 	}
 	for _, item := range items {
 		item = strings.Trim(item, " ")
 		matched, err := regexp.MatchString("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$", item)
 		if err != nil {
-			return
+			return err, features
 		}
 		if matched {
 			features = append(features, NewContinuousFeature(""))
@@ -149,10 +158,10 @@ func (reader *CSVReader) ParseFeatureType() (err error, features []Feature) {
 	}
 	err, maxPrecision := reader.ParseMaxPrecision()
 	if err != nil {
-		return
+		return err, features
 	}
 	for _, feat := range features {
-		if f, ok := feat.(ContinuousFeature); ok {
+		if f, ok := feat.(*ContinuousFeature); ok {
 			f.Precision = maxPrecision
 		}
 	}
@@ -164,7 +173,7 @@ func (reader *CSVReader) ParseFeatureName() (err error, names []string) {
 		return
 	}
 	defer f.Close()
-	freader := csv.NewReader(reader.filename)
+	freader := csv.NewReader(f)
 	names, err = freader.Read()
 	if reader.hasHeader {
 		for i, n := range names {
@@ -175,7 +184,7 @@ func (reader *CSVReader) ParseFeatureName() (err error, names []string) {
 	for i := range names {
 		names[i] = fmt.Sprintf("%d", i)
 	}
-	return names
+	return nil, names
 }
 func (reader *CSVReader) ParseMaxPrecision() (err error, precision int) {
 	rexp := regexp.MustCompile("[0-9]+(.[0-9]+)?")
@@ -195,13 +204,13 @@ func (reader *CSVReader) ParseMaxPrecision() (err error, precision int) {
 		if len(line) == 0 {
 			continue
 		}
-		if line[0] == "$" {
+		if line[0] == '$' {
 			continue
 		}
-		if line[0] == "%" {
+		if line[0] == '%' {
 			continue
 		}
-		if line[0] == "@" {
+		if line[0] == '@' {
 			continue
 		}
 		matches := rexp.FindAllString(line, -1)
