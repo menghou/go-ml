@@ -1,6 +1,7 @@
 package base
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"sync"
@@ -16,7 +17,7 @@ type DataGrid struct {
 	fgs          []*FeatureGroup
 	fixed        bool
 	maxRow       int
-	classFeature map[FeaturePointer]Feature
+	classFeature map[FeaturePointer]bool
 	lock         sync.Mutex
 }
 
@@ -30,7 +31,7 @@ func (d *DataGrid) AddFeature(f Feature) (err error) {
 	} else if _, ok = f.(*ContinuousFeature); ok {
 		ag = "continuous"
 	} else {
-		err = "can't add feature"
+		err = errors.New("can't add feature")
 		return
 	}
 	if _, ok = d.fgMap[ag]; !ok {
@@ -63,10 +64,10 @@ func (d *DataGrid) Set(fp FeaturePointer, row int, val []byte) error {
 }
 func (d *DataGrid) GetAllFeaturePoints() (error, []FeaturePointer) {
 	re := make([]FeaturePointer, len(d.features))
-	for i, f := range re {
+	for i, f := range d.features {
 		err, fp := d.GetFeaturePoint(f)
 		if err != nil {
-			return err
+			return err, re
 		}
 		re[i] = fp
 	}
@@ -80,7 +81,7 @@ func (d *DataGrid) GetFeaturePoint(what Feature) (error, FeaturePointer) {
 			}
 		}
 	}
-	return FeaturePointer{WhichFeatureGroup: -1, WhichFeatureInGroup: -1, fea: nil}, errors.New(fmt.Sprintf("can't resolve %s", what))
+	return errors.New(fmt.Sprintf("can't resolve %s", what)), FeaturePointer{WhichFeatureGroup: -1, WhichFeatureInGroup: -1, fea: nil}
 }
 func (d *DataGrid) FixSize(rowCount int) error {
 	d.lock.Lock()
@@ -95,7 +96,7 @@ func (d *DataGrid) FixSize(rowCount int) error {
 	return nil
 }
 func (d *DataGrid) AddClassFeature(f Feature) error {
-	fp, err := d.GetFeaturePoint(f)
+	err, fp := d.GetFeaturePoint(f)
 	if err != nil {
 		return err
 	}
@@ -108,12 +109,38 @@ func (d *DataGrid) AddClassFeature(f Feature) error {
 func (d *DataGrid) Size() (int, int) {
 	return len(d.features), d.maxRow
 }
+
+//TODO string
+func (d *DataGrid) String() string {
+	var buffer bytes.Buffer
+
+	err, fps := d.GetAllFeaturePoints()
+	if err != nil {
+		buffer.WriteString(fmt.Sprintf("Get feature error :%v\n", err))
+		return buffer.String()
+	}
+	cols, row := d.Size()
+	buffer.WriteString("DataSet: ")
+	buffer.WriteString(fmt.Sprintf("%d row ", row))
+	buffer.WriteString(fmt.Sprintf("%d features \n", cols))
+
+	buffer.WriteString("Features: \n")
+	for _, p := range fps {
+		prefix := "\t"
+		if d.classFeature[p] {
+			prefix = "*\t"
+		}
+		buffer.WriteString(fmt.Sprintf("%s%s\n", prefix, p.fea))
+	}
+	return buffer.String()
+}
 func NewDataGrid() *DataGrid {
 	return &DataGrid{
-		fgMap:    make(map[string]int),
-		fgRevMap: make(map[int]string),
-		features: make([]Feature, 0),
-		fgs:      make(map[string]*FeatureGroup),
-		fixed:    false,
+		fgMap:        make(map[string]int),
+		fgRevMap:     make(map[int]string),
+		features:     make([]Feature, 0),
+		fgs:          make([]*FeatureGroup, 0),
+		fixed:        false,
+		classFeature: make(map[FeaturePointer]bool),
 	}
 }
