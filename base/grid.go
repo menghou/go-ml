@@ -12,10 +12,12 @@ type DataGrid struct {
 	//fgMap means index of the feature group in fgs
 	fgMap map[string]int
 	//fgRevMap is the rev of fgMap
-	fgRevMap map[int]string
-	fgs      []*FeatureGroup
-	fixed    bool
-	lock     sync.Mutex
+	fgRevMap     map[int]string
+	fgs          []*FeatureGroup
+	fixed        bool
+	maxRow       int
+	classFeature map[FeaturePointer]Feature
+	lock         sync.Mutex
 }
 
 func (d *DataGrid) AddFeature(f Feature) (err error) {
@@ -32,7 +34,7 @@ func (d *DataGrid) AddFeature(f Feature) (err error) {
 		return
 	}
 	if _, ok = d.fgMap[ag]; !ok {
-		err = d.createFeatureGroup(ag)
+		err = d.createFeatureGroup(ag, 8)
 		if err != nil {
 			return
 		}
@@ -43,9 +45,10 @@ func (d *DataGrid) AddFeature(f Feature) (err error) {
 	d.features = append(d.features, f)
 	return nil
 }
-func (d *DataGrid) createFeatureGroup(name string) error {
+func (d *DataGrid) createFeatureGroup(name string, size int) error {
 	fg := &FeatureGroup{
-		fs: make([]Feature, 0),
+		fs:   make([]Feature, 0),
+		size: size,
 	}
 	if d.fixed {
 		return errors.New("data grid is fixed")
@@ -78,6 +81,32 @@ func (d *DataGrid) GetFeaturePoint(what Feature) (error, FeaturePointer) {
 		}
 	}
 	return FeaturePointer{WhichFeatureGroup: -1, WhichFeatureInGroup: -1, fea: nil}, errors.New(fmt.Sprintf("can't resolve %s", what))
+}
+func (d *DataGrid) FixSize(rowCount int) error {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	for _, fs := range d.fgs {
+		rowSize := fs.RowSizeInByte()
+		totalSize := rowCount * rowSize
+		fs.resize(totalSize)
+	}
+	d.fixed = true
+	d.maxRow += rowCount
+	return nil
+}
+func (d *DataGrid) AddClassFeature(f Feature) error {
+	fp, err := d.GetFeaturePoint(f)
+	if err != nil {
+		return err
+	}
+	d.lock.Lock()
+	defer d.lock.Unlock()
+
+	d.classFeature[fp] = true
+	return nil
+}
+func (d *DataGrid) Size() (int, int) {
+	return len(d.features), d.maxRow
 }
 func NewDataGrid() *DataGrid {
 	return &DataGrid{

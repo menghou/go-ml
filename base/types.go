@@ -6,6 +6,8 @@ type DataSet interface {
 	GetAllFeaturePoints() (error, []FeaturePointer)
 	GetFeaturePoint(Feature) (error, FeaturePointer)
 	Size() (row, col int)
+	FixSize(int) error
+	AddClassFeature(Feature) error
 }
 
 //data read interface, hope to support mongo, mysql, rpc

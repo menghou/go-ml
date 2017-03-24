@@ -54,6 +54,7 @@
       <root url="file://$PROJECT_DIR$/../traffic-scheduling" />
       <root url="file://$PROJECT_DIR$/../fast-cdn-log-system" />
       <root url="file://$PROJECT_DIR$/../dns-analysis" />
+      <root url="file://$PROJECT_DIR$/../gopkg.in" />
       <root url="file:///usr/local/go/src/database" />
       <root url="file:///usr/local/go/src/strings" />
       <root url="file:///usr/local/go/src/vendor" />
@@ -115,6 +116,7 @@
       <root url="file://$PROJECT_DIR$/../traffic-scheduling" />
       <root url="file://$PROJECT_DIR$/../fast-cdn-log-system" />
       <root url="file://$PROJECT_DIR$/../dns-analysis" />
+      <root url="file://$PROJECT_DIR$/../gopkg.in" />
       <root url="file:///usr/local/go/src/database" />
       <root url="file:///usr/local/go/src/strings" />
       <root url="file:///usr/local/go/src/vendor" />

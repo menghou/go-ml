@@ -37,3 +37,12 @@ func (fg *FeatureGroup) AllFeatures() []Feature {
 	}
 	return fs
 }
+func (fg *FeatureGroup) RowSizeInByte() int {
+	return len(fg.fs) * fg.size
+}
+
+func (fg *FeatureGroup) resize(add int) {
+	newVals := make([]byte, len(fg.vals)+add)
+	copy(newVals, fg.vals)
+	fg.vals = newVals
+}

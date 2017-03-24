@@ -15,8 +15,6 @@ type CSVReader struct {
 	hasHeader bool
 }
 
-//TODO fix dataSet size
-//TODO add class feature
 func (reader *CSVReader) Read() (err error, dataSet DataSet) {
 	f, err := os.Open(reader.filename)
 	if err != nil {
@@ -27,6 +25,10 @@ func (reader *CSVReader) Read() (err error, dataSet DataSet) {
 	if err != nil {
 		return
 	}
+	err, rowCount := reader.ParseRowCount()
+	if err != nil {
+		return
+	}
 	dataSet = NewDataGrid()
 	for _, f := range features {
 		err := dataSet.AddFeature(f)
@@ -34,11 +36,45 @@ func (reader *CSVReader) Read() (err error, dataSet DataSet) {
 			return
 		}
 	}
+	err = dataSet.FixSize(rowCount)
+	if err != nil {
+		return
+	}
 	err = reader.BuildDataSetFromReader(features, dataSet)
 	if err != nil {
 		return
 	}
+	err = dataSet.AddClassFeature(features[len(features)-1])
+	if err != nil {
+		return
+	}
 	return
+}
+func (reader *CSVReader) ParseRowCount() (error, int) {
+	file, err := os.Open(reader.filename)
+	if err != nil {
+		return err, 0
+	}
+	defer file.Close()
+
+	r := csv.NewReader(file)
+	counter := 0
+	for {
+		if _, err := r.Read(); err == io.EOF {
+			break
+		} else if err != nil {
+			return 0, err
+		}
+		counter++
+
+	}
+	if reader.hasHeader {
+		counter--
+	}
+	if counter < 0 {
+		return 0, nil
+	}
+	return counter, nil
 }
 func (reader *CSVReader) BuildDataSetFromReader(features []Feature, dataSet DataSet) error {
 	r := csv.NewReader(reader.filename)
