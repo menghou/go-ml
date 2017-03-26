@@ -194,7 +194,6 @@ func (reader *CSVReader) ParseMaxPrecision() (err error, precision int) {
 	}
 	defer f.Close()
 	scanner := bufio.NewScanner(f)
-	maxPrecision := 0
 	lineCount := 0
 	for scanner.Scan() {
 		if lineCount > 10 {
@@ -217,8 +216,8 @@ func (reader *CSVReader) ParseMaxPrecision() (err error, precision int) {
 		for _, match := range matches {
 			splite := strings.Split(match, ".")
 			if len(splite) == 2 {
-				if p := len(splite[1]); p > maxPrecision {
-					maxPrecision = p
+				if p := len(splite[1]); p > precision {
+					precision = p
 				}
 			}
 		}

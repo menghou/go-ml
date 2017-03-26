@@ -27,8 +27,12 @@ func (fg *FeatureGroup) set(col, row int, val []byte) error {
 	}
 	return nil
 }
+func (fg *FeatureGroup) get(col, row int) []byte {
+	offset := fg.offset(col, row)
+	return fg.vals[offset : offset+fg.size]
+}
 func (fg *FeatureGroup) offset(col, row int) int {
-	return col*len(fg.fs)*fg.size + row*fg.size
+	return row*len(fg.fs)*fg.size + col*fg.size
 }
 func (fg *FeatureGroup) AllFeatures() []Feature {
 	fs := make([]Feature, len(fg.fs))

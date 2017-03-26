@@ -24,3 +24,13 @@ func TestCSVReader_String(t *testing.T) {
 	}
 	fmt.Println(instance)
 }
+func TestCSVReader_ParseMaxPrecision(t *testing.T) {
+	reader := NewCSVReader("../examples/datasets/iris.csv", false)
+	err, maxPrecision := reader.ParseMaxPrecision()
+	if err != nil {
+		t.Error(err)
+	}
+	if maxPrecision != 1 {
+		t.Errorf("max precision received %d", maxPrecision)
+	}
+}

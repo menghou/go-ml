@@ -25,6 +25,14 @@ func (feature *ContinuousFeature) GetSysValFromString(str string) (error, []byte
 func (feature *ContinuousFeature) GetFloatFromSys(val []byte) (error, float64) {
 	return nil, UnPackBytesToFloat(val)
 }
+func (feature *ContinuousFeature) GetStringFromSysVal(val []byte) (error, string) {
+	err, float := feature.GetFloatFromSys(val)
+	if err != nil {
+		return err, ""
+	}
+	formatString := fmt.Sprintf("%%.%df", feature.Precision)
+	return err, fmt.Sprintf(formatString, float)
+}
 func (feature *ContinuousFeature) Equal(what Feature) bool {
 	f, ok := what.(*ContinuousFeature)
 	if !ok {

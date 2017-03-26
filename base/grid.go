@@ -109,6 +109,9 @@ func (d *DataGrid) AddClassFeature(f Feature) error {
 func (d *DataGrid) Size() (int, int) {
 	return len(d.features), d.maxRow
 }
+func (d *DataGrid) Get(fp FeaturePointer, row int) []byte {
+	return d.fgs[fp.WhichFeatureGroup].get(fp.WhichFeatureInGroup, row)
+}
 
 //TODO string
 func (d *DataGrid) String() string {
@@ -131,6 +134,28 @@ func (d *DataGrid) String() string {
 			prefix = "*\t"
 		}
 		buffer.WriteString(fmt.Sprintf("%s%s\n", prefix, p.fea))
+	}
+	maxRow := 20
+	if row < maxRow {
+		maxRow = row
+	}
+	for i := 0; i < maxRow; i++ {
+		buffer.WriteString("\t")
+		for _, a := range fps {
+			val := d.Get(a, i)
+			err, str := a.fea.GetStringFromSysVal(val)
+			if err != nil {
+				buffer.WriteString(fmt.Sprintf("%d row err", i))
+				return buffer.String()
+			}
+			buffer.WriteString(fmt.Sprintf("%s ", str))
+		}
+		buffer.WriteString("\n")
+	}
+	if row-maxRow == 0 {
+		buffer.WriteString("All rows displayed")
+	} else {
+		buffer.WriteString(fmt.Sprintf("\t...\n%d row(s) undisplayed", row-maxRow))
 	}
 	return buffer.String()
 }

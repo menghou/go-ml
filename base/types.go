@@ -21,4 +21,5 @@ type Feature interface {
 	Equal(Feature) bool
 	GetName() string
 	String() string
+	GetStringFromSysVal(val []byte) (error, string)
 }
