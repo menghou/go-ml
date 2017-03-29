@@ -113,7 +113,6 @@ func (d *DataGrid) Get(fp FeaturePointer, row int) []byte {
 	return d.fgs[fp.WhichFeatureGroup].get(fp.WhichFeatureInGroup, row)
 }
 
-//TODO string
 func (d *DataGrid) String() string {
 	var buffer bytes.Buffer
 
