@@ -38,4 +38,5 @@ ContinuousFeature 连续型特征
 	实现Feature,  GetSysValFromString直接将float进行pack，返回
 需要实现的utils：
 func DataSetTestTrainSplit(*DataSet,float32) (*DataSet, *DataSet)
+	用来将DataSet分割成为训练集，测试集，输入的float32是一个切割比例
 */
