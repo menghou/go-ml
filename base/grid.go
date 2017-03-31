@@ -113,6 +113,16 @@ func (d *DataGrid) Get(fp FeaturePointer, row int) []byte {
 	return d.fgs[fp.WhichFeatureGroup].get(fp.WhichFeatureInGroup, row)
 }
 
+func (d *DataGrid) GetFeatureFromFp(fp FeaturePointer) (error, Feature) {
+	if len(d.fgs) < fp.WhichFeatureGroup {
+		return errors.New(fmt.Sprintf("total feature group length %d, get %d", len(d.fgs), fp.WhichFeatureGroup)), nil
+	}
+	if len(d.fgs[fp.WhichFeatureGroup].fs) < fp.WhichFeatureInGroup {
+		return errors.New(fmt.Sprintf("total feature in group length %d, get %d", len(d.fgs[fp.WhichFeatureGroup].fs), fp.WhichFeatureInGroup)), nil
+	}
+	return nil, d.fgs[fp.WhichFeatureGroup].fs[fp.WhichFeatureInGroup]
+}
+
 func (d *DataGrid) String() string {
 	var buffer bytes.Buffer
 
