@@ -2,6 +2,7 @@ package base
 
 import (
 	"math"
+	"sort"
 	"unsafe"
 )
 
@@ -22,4 +23,10 @@ func PackU64ToBytes(val uint64) []byte {
 }
 func UnPackBytesToFloat(rawVal []byte) float64 {
 	return *(*float64)(unsafe.Pointer(&rawVal[0]))
+}
+
+// make sure vals length is not zero
+func CalMedianFloat64(vals []float64) float64 {
+	sort.Float64s(vals)
+	return vals[len(vals)/2]
 }

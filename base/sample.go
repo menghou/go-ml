@@ -1,12 +1,18 @@
 package base
 
+import (
+	"errors"
+	"github.com/gonum/matrix/mat64"
+	"go-ml/base/linear_algebra/distance"
+)
+
 type DataSamples struct {
 	Data DataSet
 	Fps  []FeaturePointer
 }
 
-func (samples *DataSamples) Get(i int) (error, []interface{}) {
-	output := make([]interface{}, len(samples.Fps))
+func (samples *DataSamples) Get(i int) (error, float64) {
+	output := make([]float64, len(samples.Fps))
 	for j, fp := range samples.Fps {
 		err, feature := samples.Data.GetFeatureFromFp(fp)
 		if err != nil {
@@ -16,17 +22,14 @@ func (samples *DataSamples) Get(i int) (error, []interface{}) {
 		switch f := feature.(type) {
 		case *ContinuousFeature:
 			_, output[j] = f.GetFloatFromSys(val)
-		case *DiscreteFeature:
-			err, output[j] = f.GetStringFromSysVal(val)
-			if err != nil {
-				return err, output
-			}
+		default:
+			return errors.New("input feature must all be continuous"), output
 		}
 	}
 	return nil, output
 }
 
-func (samples *DataSamples) CalDistance(a, b interface{}, distance func(a, b interface{}) (error, float64)) (error, float64) {
+func (samples *DataSamples) CalDistance(a, b mat64.Dense, distance linear_algebra.DistanceMeasure) (error, float64) {
 	return distance(a, b)
 }
 
